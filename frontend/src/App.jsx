@@ -1,0 +1,79 @@
+import React, { useState, useEffect } from "react";
+import Channels from "./components/Channels";
+import Peers from "./components/Peers";
+import ManageChannels from "./components/ManageChannels";
+import Invoices from "./components/Invoices";
+import "./App.css";
+
+function App() {
+
+	const [pubkey, setPubkey] = useState(null);
+	const [alias, setAlias] = useState(null);
+	const [channelBalance, setChannelBalance] = useState(null);
+	const [walletBalance, setWalletBalance] = useState(null);
+	const [channels, setChannels] = useState([]);
+	console.log(channels);
+
+
+
+
+	const fetchNodeInfo = async () => {
+		console.log("fetching node info");
+		const response = await fetch("http://127.0.0.1:5501/lightning");
+
+		const data = await response.json();
+
+		console.log(data);
+
+		if (data.info && data.balances && data.channels) {
+			setPubkey(data.info.identity_pubkey);
+			setAlias(data.info.alias);
+			setChannelBalance(data.balances.channelBalance.balance);
+			setWalletBalance(data.balances.walletBalance.total_balance);
+			setChannels(data.channels);
+		}
+	};
+
+
+	return (
+		<div className="App">
+			<header className="App-header">
+				<h1>pleb-node-lnd</h1>
+			</header>
+
+			{/* Connect button */}
+			<button onClick={fetchNodeInfo}>Connect to your node</button>
+
+			{/* Connected */}
+			<h2>Connected to {pubkey}</h2>
+
+			<h3>Node alias: {alias}</h3>
+
+			{/* Balances */}
+			<div className="balances">
+				<div className="balance">
+					<h3>Onchain balance</h3>
+					<p>{walletBalance} sats</p>
+				</div>
+				<div className="balance">
+					<h3>Lightning balance</h3>
+					<p>{channelBalance} sats</p>
+				</div>
+			</div>
+
+			{/* Peers */}
+			<Peers />
+
+			{/* Invoices */}
+			<Invoices />
+
+			{/* Open channel */}
+			<ManageChannels />
+
+			{/* channels */}
+			<Channels channels={channels} />
+		</div>
+	);
+}
+
+export default App;
