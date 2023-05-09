@@ -45,4 +45,51 @@ const getChannels = async () => {
     return channels;
 }
 
-module.exports = { connect, getInfo, getBalances, getChannels };
+// const addPeer = async (pubkey) => {
+//     console.log(lnd.services)
+//     const addPeer = await lnd.services.Lightning.connectPeer({ addr: { pubkey, host } });
+//     return addPeer;
+// }
+
+const addPeer = async (pubkey, host) => {
+    const addPeer = await lnd.services.Lightning.connectPeer({
+        addr: {
+            pubkey,
+            host: host,
+        },
+    });
+
+    return addPeer;
+};
+
+const openChannel = async (pubkey, amount) => {
+    const channelOpen = await lnd.services.Lightning.openChannel({
+        node_pubkey: pubkey,
+        local_funding_amount: amount,
+    });
+
+    return channelOpen;
+};
+
+const closeChannel = async (channelPoint) => {
+    // first get the channel point from the channel
+    const channel = await lnd.services.Lightning.getChanInfo({
+        chan_id: channelPoint,
+    });
+
+    const fundingTxId = channel.chan_point.split(":")[0];
+
+    const outputIndex = parseInt(channel.chan_point.split(":")[1]);
+
+    // then close the channel
+    const channelClose = await lnd.services.Lightning.closeChannel({
+        channel_point: {
+            funding_txid_str: fundingTxId,
+            output_index: outputIndex,
+        },
+    });
+
+    return channelClose;
+};
+
+module.exports = { connect, getInfo, getBalances, getChannels, addPeer, openChannel, closeChannel };
